@@ -165,7 +165,7 @@ feature cleanly separates fraud from legitimate claims.
 
 **Target distribution.** The strong class imbalance is the most important property of the data.
 
-![Target distribution](01_target_distribution.png)
+![Target distribution](/Figures/01_target_distribution.png)
 
 **Customer features.** Demographic features show only mild relationships with fraud; Sales and
 Clerk occupations are slightly above average, and fraudulent claimants are marginally younger.
