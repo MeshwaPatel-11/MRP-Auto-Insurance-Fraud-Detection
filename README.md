@@ -200,7 +200,7 @@ The overall workflow runs from raw data through cleaning, EDA, feature engineeri
 train/validation/test split, model training with and without SMOTE, evaluation, explainability,
 a fairness check, and external validation.
 
-![Project methodology](00_methodology_diagram.png)
+![Project methodology](/Figures/00_methodology_diagram.png)
 
 Numeric features are standardised and categorical features one-hot encoded inside a single
 `ColumnTransformer`, so identical preprocessing applies to all splits and prevents data
@@ -248,8 +248,8 @@ incident severity, claim size, witness count, and age are among the most influen
 Per-claim **waterfall plots** explain a single flagged claim in plain language, showing which
 red flags pushed it toward being classified as fraud — exactly the kind of explanation an
 investigator needs.
-
-![SHAP waterfall](/Figures/shap_waterfall_claim21.png)
+![SHAP waterfall](/Figures/shap_waterfall_claim1.png)
+![SHAP waterfall](/Figures/shap_waterfall_claim2.png)
 
 
 ### Fraud Risk Score
