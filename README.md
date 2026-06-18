@@ -200,7 +200,7 @@ The overall workflow runs from raw data through cleaning, EDA, feature engineeri
 train/validation/test split, model training with and without SMOTE, evaluation, explainability,
 a fairness check, and external validation.
 
-![Project methodology](0c:\Users\meshw\Downloads\00_methodology_diagram.png)
+![Project methodology](00_methodology_diagram.png)
 
 Numeric features are standardised and categorical features one-hot encoded inside a single
 `ColumnTransformer`, so identical preprocessing applies to all splits and prevents data
