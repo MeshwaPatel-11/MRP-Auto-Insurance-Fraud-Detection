@@ -248,8 +248,8 @@ incident severity, claim size, witness count, and age are among the most influen
 Per-claim **waterfall plots** explain a single flagged claim in plain language, showing which
 red flags pushed it toward being classified as fraud — exactly the kind of explanation an
 investigator needs.
-![SHAP waterfall](/Figures/shap_waterfall_claim1.png)
-![SHAP waterfall](/Figures/shap_waterfall_claim2.png)
+![SHAP waterfall](/Figures/21_shap_waterfall_claim1.png)
+![SHAP waterfall](/Figures/22_shap_waterfall_claim2.png)
 
 
 ### Fraud Risk Score
