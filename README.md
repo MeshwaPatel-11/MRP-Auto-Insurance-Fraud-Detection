@@ -89,7 +89,7 @@ The main dataset is a public Kaggle auto insurance fraud dataset. Class imbalanc
 
 ## Methodology
 
-![Project methodology](figures/00_methodology_diagram.png)
+<img width="2550" height="3269" alt="Project_Methodology_Diagram" src="https://github.com/user-attachments/assets/2c8d1478-a859-4b05-9668-7bf0c7294f65" />
 
 Numeric features are standardised and categorical features one-hot encoded inside a single
 column transformer. The data is split 70 / 15 / 15 (train / validation / test) in a stratified
