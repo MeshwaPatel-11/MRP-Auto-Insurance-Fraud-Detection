@@ -54,7 +54,6 @@ and its signals are turned into a transparent rule-based **Fraud Risk Score** fo
 use. The approach is evaluated using **precision, recall, F1-score**, and the **Area Under the
 ROC Curve (AUC)**.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Research Objective
 
@@ -65,7 +64,6 @@ ROC Curve (AUC)**.
 The project compares several machine learning models and reports its conclusions using
 **Recall** and **AUC Score** as the primary metrics, since the dataset is imbalanced.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Evaluation Metrics
 
@@ -82,8 +80,6 @@ on:
 A high recall with an acceptable AUC is the key parameter for selecting the best model, since
 in fraud detection a missed fraud is usually costlier than a false alarm that an investigator
 can dismiss.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Getting Started
 
@@ -109,7 +105,6 @@ can dismiss.
 
 All figures are saved as PNG files in the project folder as the notebooks run.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Data Workflow
 
@@ -142,7 +137,6 @@ claims are fraudulent and **26,560 (88.5%)** are legitimate, a ratio of roughly 
 | `total_claim_amount` | Total claim amount |
 | `fraud_reported` | **Target:** Y = fraudulent, N = legitimate |
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ### Data Cleaning
 
@@ -163,8 +157,6 @@ x_train, x_temp, y_train, y_temp = train_test_split(
 x_valid, x_test, y_valid, y_test = train_test_split(
     x_temp, y_temp, test_size=0.50, random_state=42, stratify=y_temp)
 ```
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ### Exploratory Data Analysis
 
@@ -201,7 +193,6 @@ variation across states.
 ![Monthly trend](09_monthly_trend.png)
 ![Geographic](11_geographic.png)
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ### Methodology
 
@@ -209,14 +200,13 @@ The overall workflow runs from raw data through cleaning, EDA, feature engineeri
 train/validation/test split, model training with and without SMOTE, evaluation, explainability,
 a fairness check, and external validation.
 
-![Project methodology](00_methodology_diagram.png)
+![Project methodology](0c:\Users\meshw\Downloads\00_methodology_diagram.png)
 
 Numeric features are standardised and categorical features one-hot encoded inside a single
 `ColumnTransformer`, so identical preprocessing applies to all splits and prevents data
 leakage. SMOTE is applied **inside the pipeline** so synthetic minority examples are generated
 only from the training folds.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ### Modelling
 
@@ -247,8 +237,6 @@ and AUC-ROC 0.726**, consistent with validation (no overfitting).
 
 ![ROC and PR curves](14_roc_pr_curves.png)
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 ### Model Explainability (SHAP)
 
 SHAP is used to open up the model. The global importance and beeswarm plots confirm that
@@ -263,7 +251,6 @@ investigator needs.
 
 ![SHAP waterfall](_shap_waterfall_claim21.png)
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ### Fraud Risk Score
 
@@ -274,8 +261,6 @@ from **8.3% (Low)** to **22.4% (High)**, validating the score as a triage tool.
 
 ![Risk tiers](17_risk_tiers.png)
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 ### Fairness Check
 
 The best model's behaviour was broken down by demographic group. The model **over-flags younger
@@ -285,7 +270,6 @@ responsible model development.
 
 ![Fairness by group](23_fairness_by_group.png)
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ### External Validation
 
@@ -298,7 +282,6 @@ the pipeline performs well where the data carries genuine fraud signal.
 This is the key cross-dataset evidence: the method is sound, and the modest results on the main
 dataset reflect a **weak-signal (likely synthetic) dataset** rather than a flawed approach.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Results Summary
 
@@ -313,7 +296,6 @@ dataset reflect a **weak-signal (likely synthetic) dataset** rather than a flawe
 - **External validation** reached **AUC ~0.80–0.85** on a stronger dataset, confirming the
   method is sound.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Repository Structure
 
@@ -330,10 +312,8 @@ dataset reflect a **weak-signal (likely synthetic) dataset** rather than a flawe
 └── README.md
 ```
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## License
 
 Distributed under the MIT License. See `LICENSE` for details.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
