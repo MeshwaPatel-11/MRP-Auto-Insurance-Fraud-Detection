@@ -249,7 +249,7 @@ Per-claim **waterfall plots** explain a single flagged claim in plain language, 
 red flags pushed it toward being classified as fraud — exactly the kind of explanation an
 investigator needs.
 
-![SHAP waterfall](_/Figures/shap_waterfall_claim21.png)
+![SHAP waterfall](/Figures/shap_waterfall_claim21.png)
 
 
 ### Fraud Risk Score
