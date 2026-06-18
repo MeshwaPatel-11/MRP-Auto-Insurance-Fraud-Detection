@@ -170,28 +170,28 @@ feature cleanly separates fraud from legitimate claims.
 **Customer features.** Demographic features show only mild relationships with fraud; Sales and
 Clerk occupations are slightly above average, and fraudulent claimants are marginally younger.
 
-![Customer fraud rates](03_customer_fraud_rates.png)
+![Customer fraud rates](/Figures/03_customer_fraud_rates.png)
 
 **Incident features.** Incident severity is the clearest single predictor — "Total Loss" claims
 are fraudulent about 14.8% of the time versus roughly 9.6% for "Minor Damage".
 
-![Incident fraud rates](05_incident_fraud_rates.png)
+![Incident fraud rates](/Figures/05_incident_fraud_rates.png)
 
 **Claim amounts.** Fraudulent claims tend to be slightly higher, but the distributions overlap
 heavily.
 
-![Claim amounts](07_claim_amounts.png)
+![Claim amounts](/Figures/07_claim_amounts.png)
 
 **Correlation.** No numeric feature is strongly correlated with the target, confirming that
 fraud must be inferred from many small signals rather than one dominant variable.
 
-![Correlation heatmap](08_correlation_heatmap.png)
+![Correlation heatmap](/Figures/08_correlation_heatmap.png)
 
 **Temporal and geographic.** Fraud rates show no strong seasonal pattern and only modest
 variation across states.
 
-![Monthly trend](09_monthly_trend.png)
-![Geographic](11_geographic.png)
+![Monthly trend](/Figures/09_monthly_trend.png)
+![Geographic](/Figures/11_geographic.png)
 
 
 ### Methodology
@@ -230,26 +230,26 @@ than improving the model's underlying ability to rank risk.
 The best model by validation F1 is **Logistic Regression with SMOTE**. The confusion matrices
 for all six configurations are shown below.
 
-![All confusion matrices](13b_confusion_all_models.png)
+![All confusion matrices](/Figures/13b_confusion_all_models.png)
 
 On the held-out **test set**, the best model achieved **Precision 0.222, Recall 0.686, F1 0.335,
 and AUC-ROC 0.726**, consistent with validation (no overfitting).
 
-![ROC and PR curves](14_roc_pr_curves.png)
+![ROC and PR curves](/Figures/14_roc_pr_curves.png)
 
 ### Model Explainability (SHAP)
 
 SHAP is used to open up the model. The global importance and beeswarm plots confirm that
 incident severity, claim size, witness count, and age are among the most influential features.
 
-![SHAP importance](15_shap_importance.png)
-![SHAP beeswarm](16_shap_beeswarm.png)
+![SHAP importance](/Figures/15_shap_importance.png)
+![SHAP beeswarm](/Figures/16_shap_beeswarm.png)
 
 Per-claim **waterfall plots** explain a single flagged claim in plain language, showing which
 red flags pushed it toward being classified as fraud — exactly the kind of explanation an
 investigator needs.
 
-![SHAP waterfall](_shap_waterfall_claim21.png)
+![SHAP waterfall](_/Figures/shap_waterfall_claim21.png)
 
 
 ### Fraud Risk Score
@@ -259,7 +259,7 @@ example, total-loss severity, no witnesses, a very high claim, a young claimant)
 claims into **Low / Medium / High** tiers. Fraud rates rise monotonically across the tiers,
 from **8.3% (Low)** to **22.4% (High)**, validating the score as a triage tool.
 
-![Risk tiers](17_risk_tiers.png)
+![Risk tiers](/Figures/17_risk_tiers.png)
 
 ### Fairness Check
 
@@ -268,7 +268,7 @@ claimants** relative to their actual fraud rate (about 47% flagged vs a 13.6% re
 under-30s), which a real deployment would need to correct. Reporting this openly is part of
 responsible model development.
 
-![Fairness by group](23_fairness_by_group.png)
+![Fairness by group](/Figures/23_fairness_by_group.png)
 
 
 ### External Validation
@@ -277,7 +277,7 @@ To check whether the pipeline generalises, the same method was applied to indepe
 The strongest result, an **AUC-ROC of about 0.80–0.85** on the `fraud_oracle` dataset, shows
 the pipeline performs well where the data carries genuine fraud signal.
 
-![Benchmark ROC](19_benchmark_roc.png)
+![Benchmark ROC](/Figures/19_benchmark_roc.png)
 
 This is the key cross-dataset evidence: the method is sound, and the modest results on the main
 dataset reflect a **weak-signal (likely synthetic) dataset** rather than a flawed approach.
