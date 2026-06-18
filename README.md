@@ -1,7 +1,7 @@
 # Machine Learning-Based Auto Insurance Fraud Detection
 
 **Major Research Project (MRP)** · Master of Science in Data Science and Analytics
-**Author:** Meshwa Patel (Student ID: 501390663) · Toronto Metropolitan University
+**Author:** Meshwa Patel (Student ID: 501390663)
 
 A supervised machine learning pipeline that detects fraudulent auto insurance claims from
 structured customer, policy, and incident data, and explains its decisions well enough to
@@ -17,86 +17,59 @@ support a human investigator.
 
 ---
 
-## What this project does
+## Notebooks
 
-1. **Cleans** a 30,000-claim auto insurance dataset (`01_data_cleaning`).
-2. **Explores** where the fraud signal lives (`02_eda`).
-3. **Models** fraud by comparing three classifiers, each with and without SMOTE, then
-   explains the best model with SHAP and builds a transparent rule-based risk score
-   (`03_modelling`).
-4. **Validates** the method on three independent datasets (`04_external_testing`).
+Run the notebooks **in order** (01 -> 02 -> 03), since each step depends on the previous one.
+Notebook 04 is independent and can be run after 01.
 
----
+| Notebook | What it does |
+|----------|--------------|
+| `01_data_cleaning.ipynb` | Cleans the dataset, handles missing values, builds the target |
+| `02_eda.ipynb` | Exploratory data analysis and figures |
+| `03_modelling.ipynb` | Compares 3 models (with/without SMOTE), SHAP, fairness check, risk score |
+| `04_external_testing.ipynb` | Validates the method on independent datasets |
 
-## Repository structure
-
-```
-.
-├── notebooks/
-│   ├── 01_data_cleaning.ipynb      # Clean the dataset, build the target
-│   ├── 02_eda.ipynb                # Exploratory data analysis + figures
-│   ├── 03_modelling.ipynb          # Compare models, SHAP, risk score, fairness
-│   ├── 04_external_testing.ipynb   # Validate on 3 external datasets
-│   └── *.py                        # Jupytext source (diff-friendly versions)
-├── data/
-│   ├── raw/                        # Source CSV files (main + test datasets)
-│   └── car_insurance_clean.csv     # Output of notebook 01
-├── figures/                        # All charts produced by the notebooks
-├── docs/                           # Literature review, report, proposal alignment
-├── requirements.txt
-├── LICENSE
-└── README.md
-```
-
----
-
-## How to run
-
-The notebooks are written in plain, well-commented Python and are meant to be run **in order**
-(01 → 02 → 03), because each step depends on the previous one. Notebook 04 is independent.
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/<your-username>/MRP-Auto-Insurance-Fraud-Detection.git
-cd MRP-Auto-Insurance-Fraud-Detection
-
-# 2. Install dependencies
-pip install -r requirements.txt
-
-# 3. Launch Jupyter and run the notebooks in order
-jupyter notebook
-```
-
-All figures are written to the `figures/` folder as the notebooks run.
+All files (notebooks, data, and figures) sit in the same folder, so the notebooks read the
+CSVs directly by filename.
 
 ---
 
 ## Datasets
 
-| File | Role | Rows | Target |
-|------|------|------|--------|
-| `car_insurance_fraud_dataset.csv` | **Main** training/validation/test | 30,000 | `fraud_reported` |
-| `insurance_claims__2_.csv` | Transfer test + in-domain benchmark | 1,000 | `fraud_reported` |
-| `fraud_oracle.csv` | Independent benchmark | 15,420 | `FraudFound_P` |
-| `insurance_fraud_data__1_.csv` | Second independent benchmark | 12,002 | `fraud reported` |
-| `insurance_data.csv` | Excluded (no fraud label) | 10,000 | — |
-| `carclaims.csv` | Excluded (no fraud label) | 67,856 | — |
+| File | Role | Target |
+|------|------|--------|
+| `car_insurance_fraud_dataset.csv` | Main training/validation/test dataset (30,000 claims) | `fraud_reported` |
+| `car_insurance_clean.csv` | Cleaned data produced by notebook 01 | `fraud` |
+| `insurance_claims (2).csv` | Transfer test + in-domain benchmark | `fraud_reported` |
+| `fraud_oracle.csv` | Independent benchmark | `FraudFound_P` |
+| `insurance_fraud_data (1).csv` | Second independent benchmark | `fraud reported` |
 
-The main dataset is a public Kaggle auto insurance fraud dataset. Class imbalance is roughly
-7.7 : 1 (about 11.5% of claims are fraudulent).
+The main dataset is a public Kaggle auto insurance fraud dataset, with a class imbalance of
+roughly 7.7 : 1 (about 11.5% of claims are fraudulent).
 
 ---
 
-## Methodology
+## How to run
 
-<img width="2550" height="3269" alt="Project_Methodology_Diagram" src="https://github.com/user-attachments/assets/2c8d1478-a859-4b05-9668-7bf0c7294f65" />
+```bash
+pip install pandas numpy scikit-learn xgboost imbalanced-learn shap matplotlib seaborn jupyter
+jupyter notebook
+```
+
+Then open the notebooks and run them in order. Figures are saved as PNG files in the same
+folder.
+
+---
+
+## Method
 
 Numeric features are standardised and categorical features one-hot encoded inside a single
 column transformer. The data is split 70 / 15 / 15 (train / validation / test) in a stratified
-way. Each of three models — Logistic Regression, Random Forest, XGBoost — is trained twice,
-once on the original data and once with SMOTE applied inside the pipeline, so the effect of
-resampling is measured rather than assumed. The best model is selected by validation F1,
-explained with SHAP, and turned into a Low/Medium/High rule-based risk score.
+way. Each of three models -- Logistic Regression, Random Forest, and XGBoost -- is trained
+twice, once on the original data and once with SMOTE applied inside the pipeline, so the effect
+of resampling is measured rather than assumed. The best model is selected by validation F1,
+explained with SHAP (global and per-claim), and turned into a Low / Medium / High rule-based
+risk score. A fairness check and external validation complete the workflow.
 
 ---
 
@@ -105,25 +78,12 @@ explained with SHAP, and turned into a Low/Medium/High rule-based risk score.
 - The fraud signal in the main dataset is **weak and diffuse**; incident severity is the
   single most useful feature.
 - The best model (**Logistic Regression + SMOTE**) reached a test **AUC-ROC of 0.726** with
-  high recall (~0.69) and low precision (~0.22). It is a **triage / ranking tool**, not an
+  high recall (~0.69) and low precision (~0.22) -- a **triage / ranking tool**, not an
   automatic accept/reject system.
 - The rule-based **risk score** works: the High tier had roughly double the fraud rate of the
   Low tier (22.4% vs 8.3%).
 - A **fairness check** found the model over-flags younger claimants relative to their true
-  fraud rate — reported openly.
-- **External validation:** the same pipeline reached **AUC ~0.80–0.85** on the `fraud_oracle`
+  fraud rate.
+- **External validation:** the same pipeline reached **AUC ~0.80-0.85** on the `fraud_oracle`
   dataset, showing the method is sound and that the modest main-dataset numbers reflect a
-  weak-signal (likely synthetic) dataset rather than a flawed approach.
-
----
-
-## Documentation
-
-The `docs/` folder contains the literature review, the full MRP report, and a
-proposal-alignment document mapping each proposal requirement to where it is delivered.
-
----
-
-## License
-
-Released under the MIT License — see [LICENSE](LICENSE).
+  weak-signal dataset rather than a flawed approach.
