@@ -1,5 +1,4 @@
 <a name="readme-top"></a>
-
 # Auto Insurance Fraud Detection
 
 > The goal of this research is to build a binary classifier model that can separate
@@ -7,13 +6,11 @@
 > well enough to support a human investigator.
 
 **Author:** Meshwa Patel (Student ID: 501390663)
-
 **Program:** Master of Science in Data Science and Analytics — Major Research Project (MRP)
 
 ---
 
 ## Table of Contents
-
 1. [About the Project](#about-the-project)
 2. [Research Objective](#research-objective)
 3. [Evaluation Metrics](#evaluation-metrics)
@@ -27,6 +24,7 @@
    - [Model Explainability (SHAP)](#model-explainability-shap)
    - [Fraud Risk Score](#fraud-risk-score)
    - [Fairness Check](#fairness-check)
+   - [Robustness Checks](#robustness-checks)
    - [External Validation](#external-validation)
 6. [Results Summary](#results-summary)
 7. [Repository Structure](#repository-structure)
@@ -44,17 +42,27 @@ genuine one.
 
 This project applies multiple machine learning techniques to classify claims as fraudulent or
 legitimate. Before modelling, exploratory data analysis is used to understand how the
-categorical and numerical features relate to the fraud label. Because the data is heavily
-imbalanced (only about 11.5% of claims are fraudulent), the **Synthetic Minority Over-sampling
-Technique (SMOTE)** is applied, and every model is trained both **with and without** SMOTE so
-the effect of resampling can be measured rather than assumed.
+categorical and numerical features relate to the fraud label — and that EDA also turned up
+something not in the original plan: strong statistical evidence that the main dataset is
+**synthetic** (near-zero skew, suspiciously uniform category proportions, almost no inter-feature
+correlation). This doesn't invalidate the comparison between methods, but it does cap how good
+any model can realistically get on this file, which is exactly why external validation on real
+data (see below) matters so much here.
 
-Three classifiers — **Logistic Regression, Random Forest, and XGBoost** — are compared under
-identical preprocessing. The best model is explained using **SHAP** (global and per-claim),
-and its signals are turned into a transparent rule-based **Fraud Risk Score** for investigator
-use. The approach is evaluated using **precision, recall, F1-score**, and the **Area Under the
-ROC Curve (AUC)**.
+Because the data is heavily imbalanced (only about 11.5% of claims are fraudulent), the
+**Synthetic Minority Over-sampling Technique (SMOTE)** is applied, and every model is trained
+both **with and without** SMOTE so the effect of resampling can be measured rather than assumed.
 
+**Four** classifiers — **Logistic Regression, Random Forest, XGBoost, and a Neural Network**
+(MLP) — are compared under identical preprocessing. *(The original proposal scoped three models;
+the Neural Network was added afterward to rule out non-linear structure the other three might be
+missing.)* The best model is explained using **SHAP** (global and per-claim) and cross-checked
+with an independent feature-ablation test, and its signals are turned into a transparent
+rule-based **Fraud Risk Score** for investigator use. Beyond the original proposal, the project
+also includes a **fairness audit and mitigation**, a battery of **robustness checks** (grid
+search, threshold sweep, ablation, significance test, calibration, cost-based value analysis),
+and **external validation on three independent real-world datasets**. The approach is evaluated
+using **precision, recall, F1-score**, and the **Area Under the ROC Curve (AUC)**.
 
 ## Research Objective
 
@@ -62,19 +70,19 @@ ROC Curve (AUC)**.
 > structured claim and policyholder data, and can the model's decisions be explained well
 > enough to support a human investigator?*
 
-The project compares several machine learning models and reports its conclusions using
-**Recall** and **AUC Score** as the primary metrics, since the dataset is imbalanced.
-
+The project compares four machine learning models and reports its conclusions using
+**Recall** and **AUC Score** as primary metrics, since the dataset is imbalanced, alongside
+Precision and F1.
 
 ## Evaluation Metrics
 
 Because the data is imbalanced, **accuracy is misleading** — a model that predicts "never
-fraud" would score about 88% accuracy while catching zero fraud. The project therefore relies
+fraud" would score about 88.5% accuracy while catching zero fraud. The project therefore relies
 on:
 
 - **Precision** — of all claims flagged as fraud, how many were actually fraud.
 - **Recall** — of all real frauds, how many the model caught.
-- **F1-Score** — the balance of precision and recall.
+- **F1-Score** — the balance of precision and recall; the primary model-selection metric.
 - **AUC-ROC** — how well the model ranks claims by risk. An AUC near 1.0 indicates strong
   separability; an AUC near 0.5 is no better than chance.
 
@@ -85,35 +93,29 @@ can dismiss.
 ## Getting Started
 
 1. Clone the repository:
-
    ```bash
    git clone https://github.com/<your-username>/Auto-Insurance-Fraud-Detection.git
    cd Auto-Insurance-Fraud-Detection
    ```
-
 2. Install the required libraries:
-
    ```bash
-   pip install -r requirements.txt
+   pip install pandas numpy scikit-learn xgboost imbalanced-learn shap seaborn matplotlib jupyter
    ```
-
-3. Launch Jupyter and run the notebooks **in order** (01 → 02 → 03); notebook 04 is
-   independent:
-
+3. Launch Jupyter and run the notebooks **in order** (01 → 02 → 03_modelling_1); notebook
+   `04_external_testing` is independent and can be run any time after 01:
    ```bash
    jupyter notebook
    ```
 
-All figures are saved as PNG files in the project folder as the notebooks run.
-
+All figures are saved as PNG files to the `figures/` folder as the notebooks run.
 
 ## Data Workflow
 
 ### Dataset
 
-The main dataset is a publicly available Kaggle **Car Insurance Fraud** dataset containing
-**30,000 claims and 24 features** plus the target. It is highly imbalanced: **3,440 (11.5%)**
-claims are fraudulent and **26,560 (88.5%)** are legitimate, a ratio of roughly 7.7 : 1.
+The main dataset is a **Car Insurance Fraud** dataset containing **30,000 claims and 24
+features** plus the target. It is highly imbalanced: **3,440 (11.5%)** claims are fraudulent and
+**26,560 (88.5%)** are legitimate, a ratio of roughly 7.7 : 1.
 
 | Column | Description |
 | --- | --- |
@@ -138,19 +140,24 @@ claims are fraudulent and **26,560 (88.5%)** are legitimate, a ratio of roughly 
 | `total_claim_amount` | Total claim amount |
 | `fraud_reported` | **Target:** Y = fraudulent, N = legitimate |
 
+Beyond the raw columns, three external datasets are used purely for validation — see
+[External Validation](#external-validation) — and are **not** the same schema as the main file;
+they are handled honestly rather than treated as interchangeable.
 
 ### Data Cleaning
 
 Cleaning was deliberately light, since the data was already well structured. The steps were:
 
 - Filling the only column with missing values, `authorities_contacted` (25.2% missing), with
-  the category `"None"` — interpreting a blank as "no authority contacted".
+  the category `"None"` — interpreting a blank as "no authority contacted." This turned out to
+  be one of the strongest fraud predictors in the dataset, so the missingness itself was signal,
+  not just noise to be dropped.
 - Parsing `incident_date` into a proper date type.
 - Standardising text categories by trimming whitespace.
 - Creating a numeric target `fraud` (1/0) from `fraud_reported` (Y/N).
 
 The data was then split in a **stratified** way into **70% training, 15% validation, and 15%
-test**, preserving the fraud rate in each subset.
+test**, preserving the 11.5% fraud rate in each subset, with the test set touched exactly once.
 
 ```python
 x_train, x_temp, y_train, y_temp = train_test_split(
@@ -162,159 +169,189 @@ x_valid, x_test, y_valid, y_test = train_test_split(
 ### Exploratory Data Analysis
 
 The central finding of the EDA is that the **fraud signal is weak and diffuse** — no single
-feature cleanly separates fraud from legitimate claims.
+feature cleanly separates fraud from legitimate claims — and that the dataset shows strong
+statistical fingerprints of being **synthetic**.
 
 **Target distribution.** The strong class imbalance is the most important property of the data.
 
-![Target distribution](/Figures/01_target_distribution.png)
+![Target distribution](figures/01_target_distribution.png)
 
-**Customer features.** Demographic features show only mild relationships with fraud; Sales and
-Clerk occupations are slightly above average, and fraudulent claimants are marginally younger.
+**Correlation.** No numeric feature is strongly correlated with the target — only 2 of 64
+feature pairs show any real relationship — confirming that fraud must be inferred from many
+weak signals rather than one dominant variable.
 
-![Customer fraud rates](/Figures/03_customer_fraud_rates.png)
+![Correlation heatmap](figures/08_correlation_heatmap.png)
 
 **Incident features.** Incident severity is the clearest single predictor — "Total Loss" claims
-are fraudulent about 14.8% of the time versus roughly 9.6% for "Minor Damage".
+are fraudulent about 14.8% of the time versus roughly 9.6% for "Minor Damage" — but the spread
+is still narrow.
 
-![Incident fraud rates](/Figures/05_incident_fraud_rates.png)
-
-**Claim amounts.** Fraudulent claims tend to be slightly higher, but the distributions overlap
-heavily.
-
-![Claim amounts](/Figures/07_claim_amounts.png)
-
-**Correlation.** No numeric feature is strongly correlated with the target, confirming that
-fraud must be inferred from many small signals rather than one dominant variable.
-
-![Correlation heatmap](/Figures/08_correlation_heatmap.png)
-
-**Temporal and geographic.** Fraud rates show no strong seasonal pattern and only modest
-variation across states.
-
-![Monthly trend](/Figures/09_monthly_trend.png)
-![Geographic](/Figures/11_geographic.png)
-
+**Synthetic-data check.** Four independent statistical checks — near-zero skew/kurtosis on
+numeric features, suspiciously uniform category proportions (e.g. every occupation between
+12.3–12.7% of the data), near-zero inter-feature correlation, and unnaturally even geographic/
+temporal spread — together point to a synthetically generated dataset. This was not requested
+by the proposal; it was found during EDA and is disclosed here for honesty. It does not
+invalidate model comparison, but it does mean absolute performance numbers on this file should
+be read cautiously and weighed against the external validation results below.
 
 ### Methodology
 
 The overall workflow runs from raw data through cleaning, EDA, feature engineering, the
-train/validation/test split, model training with and without SMOTE, evaluation, explainability,
-a fairness check, and external validation.
+train/validation/test split, model training with and without SMOTE (×4 models), evaluation,
+explainability, a fairness check, robustness checks, and external validation.
 
-![Project methodology](/Figures/00_methodology_diagram.png)
+![Project methodology](figures/Project_Methodology.png)
 
-Numeric features are standardised and categorical features one-hot encoded inside a single
-`ColumnTransformer`, so identical preprocessing applies to all splits and prevents data
-leakage. SMOTE is applied **inside the pipeline** so synthetic minority examples are generated
-only from the training folds.
-
+Seven engineered features were added (claim-to-premium ratio, red-flag indicators such as no
+witnesses / no police report, a severity score, and time-based features). Numeric features are
+standardised and categorical features one-hot encoded inside a single `ColumnTransformer`, so
+identical preprocessing applies to all splits and prevents data leakage. SMOTE is applied
+**inside the pipeline** so synthetic minority examples are generated only from the training
+folds.
 
 ### Modelling
 
-Each of the three models was trained twice — on the original imbalanced data and with SMOTE —
-giving six configurations evaluated on the validation set.
+Each of the four models was trained twice — on the original imbalanced data and with SMOTE —
+giving **eight** configurations evaluated on the validation set.
 
-| Model | Data | Precision | Recall | F1 | AUC-ROC |
-| --- | --- | --- | --- | --- | --- |
-| Logistic Regression | Original | 0.364 | 0.016 | 0.030 | 0.698 |
-| Logistic Regression | SMOTE | 0.207 | 0.612 | **0.310** | 0.695 |
-| Random Forest | Original | 0.333 | 0.004 | 0.008 | 0.740 |
-| Random Forest | SMOTE | 0.434 | 0.045 | 0.081 | 0.736 |
-| XGBoost | Original | 0.440 | 0.099 | 0.161 | 0.731 |
-| XGBoost | SMOTE | 0.431 | 0.103 | 0.166 | 0.731 |
+![Four-model comparison](figures/27_four_model_comparison.png)
 
 The clearest pattern is the **effect of SMOTE on recall**: without it, every model has
-near-zero recall (it predicts "not fraud" for almost everything); with SMOTE, recall rises
-sharply. Notably, AUC barely changes, which shows SMOTE shifts the decision threshold rather
-than improving the model's underlying ability to rank risk.
+near-zero recall (Logistic Regression 1.6%, the Neural Network essentially 0%) because it's
+easiest to just predict "not fraud" for almost everything. With SMOTE, Logistic Regression's
+recall jumps to **61.2%** — the largest single change in the project. Notably, AUC barely moves
+(0.698 → 0.695), which shows SMOTE shifts the decision **threshold** rather than improving the
+model's underlying ability to rank risk.
 
-The best model by validation F1 is **Logistic Regression with SMOTE**. The confusion matrices
-for all six configurations are shown below.
+The best model by validation F1 is **Logistic Regression with SMOTE** — also the simplest and
+most interpretable model in the comparison, beating both tree ensembles and the neural network.
 
-![All confusion matrices](/Figures/13b_confusion_all_models.png)
+![Confusion matrices, all models](figures/13b_confusion_all_models.png)
 
-On the held-out **test set**, the best model achieved **Precision 0.222, Recall 0.686, F1 0.335,
-and AUC-ROC 0.726**, consistent with validation (no overfitting).
+On the held-out **test set**, the best model achieved **Precision 0.222, Recall 0.686, F1
+0.335, and AUC-ROC 0.726**, consistent with validation (no overfitting). Out of 516 true
+frauds in the test set, 354 were caught and 162 missed, with 1,242 false alarms; the missed
+frauds tend to carry fewer red flags (12.3% no-witness vs. 40.7% for caught frauds), so the
+errors follow a structured, explainable pattern rather than being random.
 
-![ROC and PR curves](/Figures/14_roc_pr_curves.png)
+![ROC and PR curves](figures/14_roc_pr_curves.png)
 
 ### Model Explainability (SHAP)
 
-SHAP is used to open up the model. The global importance and beeswarm plots confirm that
-incident severity, claim size, witness count, and age are among the most influential features.
+SHAP is used to open up the model. The global importance and beeswarm plots show that whether
+authorities were contacted, the no-witness flag, the claim-to-premium ratio, and claimant age
+are the top drivers, and they come out roughly equal — no single feature dominates.
 
-![SHAP importance](/Figures/15_shap_importance.png)
-![SHAP beeswarm](/Figures/16_shap_beeswarm.png)
+![SHAP importance](figures/15_shap_importance.png)
+![SHAP beeswarm](figures/16_shap_beeswarm.png)
 
-Per-claim **waterfall plots** explain a single flagged claim in plain language, showing which
-red flags pushed it toward being classified as fraud — exactly the kind of explanation an
-investigator needs.
-![SHAP waterfall](/Figures/21_shap_waterfall_claim1.png)
-![SHAP waterfall](/Figures/22_shap_waterfall_claim2.png)
-
+As an independent cross-check (beyond what SHAP alone provides), each feature group was also
+removed one at a time and the model re-evaluated. Removing the authorities-contacted information
+caused the largest drop of any group tested (**−0.070 AUC**), matching SHAP's top-ranked feature
+and giving two independent methods that agree.
 
 ### Fraud Risk Score
 
-A transparent, rule-based score (0–100) assigns points for human-readable red flags (for
-example, total-loss severity, no witnesses, a very high claim, a young claimant) and sorts
-claims into **Low / Medium / High** tiers. Fraud rates rise monotonically across the tiers,
-from **8.3% (Low)** to **22.4% (High)**, validating the score as a triage tool.
+A transparent, rule-based score assigns points for human-readable red flags (total-loss
+severity, no witnesses, a very high claim, a young claimant, etc.). Point values were not
+guessed — each candidate flag's actual lift in fraud rate above baseline was measured, and only
+flags clearing a real threshold were kept. Claims are then sorted into **Low / Medium / High**
+tiers. Fraud rates rise from **8.8% (Low)** to **10.9% (Medium)** to **26.7% (High)** — the High
+tier is roughly three times the Low tier — validating the score as a triage tool an investigator
+can read without touching the model.
 
-![Risk tiers](/Figures/17_risk_tiers.png)
+![Risk tiers](figures/17_risk_tiers.png)
 
 ### Fairness Check
 
-The best model's behaviour was broken down by demographic group. The model **over-flags younger
-claimants** relative to their actual fraud rate (about 47% flagged vs a 13.6% real rate for
-under-30s), which a real deployment would need to correct. Reporting this openly is part of
-responsible model development.
+*(Beyond the original proposal.)* The best model's behaviour was broken down by demographic
+group. The model **over-flags younger claimants** relative to their actual fraud rate — about
+47% of under-30 claimants were flagged versus a 13.6% real offense rate for that group. The
+model was then retrained without age, sex, and education to correct this. F1 barely moved
+(**0.335 → 0.338**, essentially unchanged) while the unfair flagging gap shrank substantially —
+the fix cost next to nothing.
 
-![Fairness by group](/Figures/23_fairness_by_group.png)
+![Fairness by group](figures/23_fairness_by_group.png)
+![Fairness after mitigation](figures/23b_fairness_mitigation.png)
 
+### Robustness Checks
+
+*(Beyond the original proposal.)* To stress-test the headline result before reporting it, several
+additional checks were run: a grid search over hyperparameters, a decision-threshold sweep,
+the feature-ablation check described above, a statistical significance test (McNemar's test)
+comparing model configurations, a calibration check (Brier score / reliability curve) showing
+the model's probabilities are usable for ranking but not perfectly calibrated, repeated
+cross-validation to confirm the result isn't a lucky split, and a cost-based value analysis.
+
+![Cross-validation F1 with error bars](figures/24_cv_f1_errorbars.png)
+![Calibration](figures/32_calibration.png)
+
+The cost analysis shows that, used as a ranking tool, reviewing just the top 1,000 riskiest
+claims catches **53.5%** of all fraud in the dataset — worth roughly **$4.25M** in net value on
+the test set alone at a $200/claim review cost assumption.
 
 ### External Validation
 
-To check whether the pipeline generalises, the same method was applied to independent datasets.
-The strongest result, an **AUC-ROC of about 0.80–0.85** on the `fraud_oracle` dataset, shows
-the pipeline performs well where the data carries genuine fraud signal.
+*(Beyond the original proposal — the proposal did not call for testing on outside data.)* To
+check whether the pipeline generalises, the exact same trained pipeline was applied to three
+independent, real-world datasets it had never seen.
 
-![Benchmark ROC](/Figures/19_benchmark_roc.png)
+![Four-model benchmark on fraud_oracle](figures/30_benchmark_roc_4models.png)
 
-This is the key cross-dataset evidence: the method is sound, and the modest results on the main
-dataset reflect a **weak-signal (likely synthetic) dataset** rather than a flawed approach.
+The first transfer attempt scored a weak **AUC of 0.374** — worse than chance — which raised the
+question of whether the *data* or the *method* was at fault. Retraining fresh on 70% of that
+same dataset and testing on the remaining 30% recovered an AUC of **0.784**, showing there was
+real signal in that data all along; the original failure was a **domain gap** (a model needs to
+be retrained per portfolio, not blindly transferred), not a broken method. A second, completely
+independent benchmark dataset then reached **AUC 0.855** — the best score anywhere in the
+project, on real data. This is the key cross-dataset evidence: the method is sound, and the
+comparatively modest results on the main training dataset reflect that dataset's weak,
+likely-synthetic signal rather than a flawed approach.
 
+![All testing results](figures/31_all_testing_results.png)
 
 ## Results Summary
 
-- The fraud signal in the main dataset is **weak and diffuse**; incident severity is the single
-  most useful feature.
-- The best model (**Logistic Regression + SMOTE**) reached a test **AUC-ROC of 0.726** with high
-  recall (~0.69) and low precision (~0.22). It is a **triage / ranking tool**, not an automatic
-  accept/reject system.
-- The rule-based **risk score** works: the High tier had roughly double the fraud rate of the
-  Low tier.
-- A **fairness check** found the model over-flags younger claimants.
-- **External validation** reached **AUC ~0.80–0.85** on a stronger dataset, confirming the
-  method is sound.
-
+- The fraud signal in the main dataset is **weak and diffuse**, and four independent statistical
+  checks point to the dataset being **synthetic** — disclosed openly, not hidden.
+- The best model (**Logistic Regression + SMOTE**, the simplest of four models compared) reached
+  a test **F1 of 0.335** and **AUC-ROC of 0.726**, with Recall 0.686 and Precision 0.222. It is a
+  **triage / ranking tool**, not an automatic accept/reject system.
+- **SMOTE shifts the decision threshold** (recall 1.6% → 61.2%) rather than improving the
+  model's underlying ranking ability (AUC 0.698 → 0.695 — essentially flat).
+- The rule-based **risk score** works as triage: High tier 26.7% fraud rate vs. 8.8% Low tier.
+- SHAP and an independent **feature-ablation** check agree on the top driver: whether
+  authorities were contacted.
+- A **fairness audit** found the model over-flags claimants under 30; removing demographic
+  features **fixed the gap at essentially no cost to F1** (0.335 → 0.338).
+- **Robustness checks** (grid search, threshold sweep, ablation, significance test, calibration,
+  cost analysis) all support the headline result; as a ranking tool, the top 1,000 riskiest
+  claims capture 53.5% of all fraud, worth ~$4.25M net on the test set.
+- **External validation** on three real datasets: a transfer test scored AUC 0.374 (domain gap),
+  an in-domain retrain on that same data recovered AUC 0.784, and an independent benchmark
+  dataset reached AUC 0.855 — the pipeline performs *better* on real data than on the main
+  (likely synthetic) training set, confirming the method itself is sound.
 
 ## Repository Structure
 
 ```
 .
-├── 01_data_cleaning.ipynb        # Clean the dataset, build the target
-├── 02_eda.ipynb                  # Exploratory data analysis + figures
-├── 03_modelling.ipynb            # Compare models, SHAP, fairness, risk score
-├── 04_external_testing.ipynb     # Validate on independent datasets
-├── *.csv                         # Datasets
-├── *.png                         # Figures produced by the notebooks
+├── notebooks/
+│   ├── 01_data_cleaning.ipynb      # Clean the main dataset, build the target
+│   ├── 02_eda.ipynb                # EDA + synthetic-data checks + charts
+│   ├── 03_modelling_1.ipynb        # 4 models × SMOTE, SHAP, risk score, fairness, robustness
+│   └── 04_external_testing.ipynb   # Apply the pipeline to 3 external datasets
+├── data/
+│   ├── raw/                        # Place the raw CSV files here
+│   └── car_insurance_clean.csv     # Output of notebook 01 (cleaned data)
+├── figures/                        # All charts saved by the notebooks (PNG)
+├── Literature_Review_Meshwa_Patel.docx
 ├── requirements.txt
-├── LICENSE
 └── README.md
 ```
-
 
 ## License
 
 Distributed under the MIT License. See `LICENSE` for details.
 
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
