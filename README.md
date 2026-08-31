@@ -214,6 +214,22 @@ folds.
 Each of the four models was trained twice — on the original imbalanced data and with SMOTE —
 giving **eight** configurations evaluated on the validation set.
 
+| Model | Data | Precision | Recall | F1 | AUC-ROC |
+| --- | --- | --- | --- | --- | --- |
+| Logistic Regression | Original | 0.364 | 0.016 | 0.030 | 0.698 |
+| Logistic Regression | SMOTE | 0.207 | 0.612 | **0.335** | 0.695 |
+| Random Forest | Original | 0.333 | 0.004 | 0.008 | 0.740 |
+| Random Forest | SMOTE | 0.434 | 0.045 | 0.081 | 0.736 |
+| XGBoost | Original | 0.440 | 0.099 | 0.161 | 0.731 |
+| XGBoost | SMOTE | 0.431 | 0.103 | 0.166 | 0.731 |
+| Neural Network | Original | — | 0.000 | 0.000 | 0.702 |
+| Neural Network | SMOTE | 0.198 | 0.549 | 0.291 | 0.699 |
+
+*Logistic Regression + SMOTE is the winner by F1, and by a wide margin — nearly double the
+next-best configuration. Test-set numbers for the winning model (Precision 0.222, Recall 0.686,
+F1 0.335, AUC-ROC 0.726) are reported separately below, since the table above is validation-set
+performance used for model selection.*
+
 ![Four-model comparison](Figures/27_four_model_comparison.png)
 
 The clearest pattern is the **effect of SMOTE on recall**: without it, every model has
@@ -355,3 +371,4 @@ likely-synthetic signal rather than a flawed approach.
 Distributed under the MIT License. See `LICENSE` for details.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
