@@ -117,7 +117,7 @@ All figures are saved as PNG files to the `figures/` folder as the notebooks run
 The main dataset is a **Car Insurance Fraud** dataset containing **30,000 claims and 24
 features** plus the target. It is highly imbalanced: **3,440 (11.5%)** claims are fraudulent and
 **26,560 (88.5%)** are legitimate, a ratio of roughly 7.7 : 1.
-
+<p align="center">
 | Column | Description |
 | --- | --- |
 | `policy_state` | State where the policy was issued |
@@ -140,6 +140,7 @@ features** plus the target. It is highly imbalanced: **3,440 (11.5%)** claims ar
 | `police_report_available` | Whether a police report was filed |
 | `total_claim_amount` | Total claim amount |
 | `fraud_reported` | **Target:** Y = fraudulent, N = legitimate |
+</p>
 
 Beyond the raw columns, three external datasets are used purely for validation — see
 [External Validation](#external-validation) — and are **not** the same schema as the main file;
