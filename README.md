@@ -200,7 +200,7 @@ The overall workflow runs from raw data through cleaning, EDA, feature engineeri
 train/validation/test split, model training with and without SMOTE (×4 models), evaluation,
 explainability, a fairness check, robustness checks, and external validation.
 
-![Project methodology](Figures/Project_Methodology.png)
+![Project methodology](Figures/Project_Methodology_1.png)
 
 Seven engineered features were added (claim-to-premium ratio, red-flag indicators such as no
 witnesses / no police report, a severity score, and time-based features). Numeric features are
